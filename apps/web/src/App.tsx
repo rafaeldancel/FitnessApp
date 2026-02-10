@@ -83,7 +83,7 @@ export function App() {
         This comes from our shared "costume closet" (packages/ui)
         Any app in the monorepo can use this same Header!
       */}
-      <Header title="The Hytel Way" />
+      <Header title="RAFAEL DANCEL - Test Bootcamp Project" />
 
       {/* Logo Section */}
       <div className="flex justify-center gap-8 my-8">
