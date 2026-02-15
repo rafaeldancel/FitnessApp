@@ -1,15 +1,11 @@
-// Firebase Functions entry point (stub)
-// This file serves as the entry point for Firebase Cloud Functions
-// In production, this would be deployed to Firebase
+import * as functions from 'firebase-functions'
 
-export { appRouter, type AppRouter } from './trpc/router'
+// Simple test function
+export const helloWorld = functions.https.onRequest((request, response) => {
+  response.json({ message: "Hello from Firebase!", timestamp: new Date().toISOString() })
+})
 
-// Stub: When deploying to Firebase, you would use:
-// import * as functions from 'firebase-functions'
-// import { createHTTPHandler } from '@trpc/server/adapters/standalone'
-//
-// export const api = functions.https.onRequest(
-//   createHTTPHandler({ router: appRouter })
-// )
-
-console.log('Functions entry point loaded (stub mode)')
+// Health check endpoint
+export const health = functions.https.onRequest((request, response) => {
+  response.json({ status: "ok" })
+})

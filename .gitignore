@@ -87,3 +87,20 @@ database-debug.log
 server/dist
 public/dist
 *.pem
+
+# Firebase emulator data
+.firebase/
+firebase-debug.log
+firestore-debug.log
+
+# Functions build output
+apps/functions/lib/
+apps/functions/dist/
+
+# Backup folders
+firebase_backup/
+apps/trpc.backup/
+
+# Old functions folder (if from firebase init)
+functions/
+public/
