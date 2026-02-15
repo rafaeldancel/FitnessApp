@@ -1,10 +1,11 @@
 import { initializeApp } from 'firebase/app'
-import { getAuth, connectAuthEmulator } from 'firebase/auth'
-import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore'
-import { getFunctions, connectFunctionsEmulator } from 'firebase/functions'
+import { getAuth } from 'firebase/auth'
+import { getFirestore } from 'firebase/firestore'
+import { getFunctions } from 'firebase/functions'
 
+// Production Firebase Configuration
 const firebaseConfig = {
-  apiKey: 'AIzaSyBzNnZF7bh8opxVo6ZCEC-2wGmMQBE-AFU',
+  apiKey: 'AIzaSyBZNhZF7bh8ppxVo6ZCEC-2wGmMQ0E-AFU',
   authDomain: 'fitnessapp-74003.firebaseapp.com',
   projectId: 'fitnessapp-74003',
   storageBucket: 'fitnessapp-74003.firebasestorage.app',
@@ -19,13 +20,8 @@ export const db = getFirestore(app)
 export const functions = getFunctions(app)
 
 if (import.meta.env.DEV) {
-  console.log('��� Connecting to Firebase Emulators...')
-  connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true })
-  connectFirestoreEmulator(db, '127.0.0.1', 8080)
-  // Functions connection - will silently fail if functions not running, which is fine
-  try {
-    connectFunctionsEmulator(functions, '127.0.0.1', 5001)
-  } catch (e) {
-    console.log('⚠️ Functions emulator not available')
-  }
+  console.log('🔥 Firebase initialized in PRODUCTION mode')
+  console.log('📧 Real emails WILL be sent for verification')
+  console.log('💾 Data will be saved to PRODUCTION Firestore')
+  console.warn('⚠️ NOT using emulators - this is REAL Firebase!')
 }

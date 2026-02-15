@@ -1,43 +1,95 @@
-import { useState } from 'react'
 import './style.css'
 // Import Firebase to trigger emulator connection
-import { auth, db } from './lib/firebase'
+import './lib/firebase'
 
-import { Header } from '@repo/ui/Header'
-import { Button } from '@repo/ui/Button'
-import { Card, CardHeader, CardTitle, CardContent } from '@repo/ui/Card'
+import { useState } from 'react'
+import { useAuth } from './hooks/useAuth'
+import { Splash } from './pages/Splash'
+import { Welcome } from './pages/Welcome'
+import { Auth } from './pages/Auth'
+import { Onboarding } from './pages/Onboarding'
+import { Dashboard } from './pages/Dashboard'
+import { LogWorkout } from './pages/LogWorkout'
+import { Plan } from './pages/Plan'
+import { Progress } from './pages/Progress'
+import { ProtectedRoute } from './components/ProtectedRoute'
+import { BottomNav } from './components/BottomNav'
 
 export function App() {
-  const [count, setCount] = useState(0)
+  const { user, firebaseUser, loading } = useAuth() // ← CORRECTED: use 'user' not 'userDocument'
+  const [splashComplete, setSplashComplete] = useState(false)
+  const [showWelcome, setShowWelcome] = useState(true)
+  const [currentPage, setCurrentPage] = useState<'dashboard' | 'plan' | 'log' | 'progress'>('dashboard')
 
-  // Test Firebase connection
-  console.log('Firebase Auth:', auth)
-  console.log('Firebase DB:', db)
-
-  return (
-    <div className="min-h-screen py-8 px-4">
-      <Header title="Fitness App - Firebase Test" />
-
-      <div className="max-w-4xl mx-auto">
-        <Card>
-          <CardHeader>
-            <CardTitle>Firebase Connection Test</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="mb-4">Check the browser console (F12) for:</p>
-            <code className="bg-gray-100 p-2 block rounded">
-              ��� Connecting to Firebase Emulators...
-            </code>
-            <p className="mt-4 text-sm text-gray-600">
-              If you see this message, Firebase is connected! ✅
-            </p>
-
-            <div className="mt-6">
-              <Button onClick={() => setCount(count + 1)}>Test Button (Count: {count})</Button>
-            </div>
-          </CardContent>
-        </Card>
+  // Show loading spinner while checking auth state (initial load)
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-violet-600 border-t-transparent"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
       </div>
-    </div>
-  )
+    )
+  }
+
+  // Show splash screen on first load
+  if (!splashComplete) {
+    return <Splash onComplete={() => setSplashComplete(true)} isAuthenticated={!!firebaseUser} />
+  }
+
+  // If user is authenticated, check onboarding status
+  if (firebaseUser) {
+    // Wait for user document to load
+    if (!user) {
+      return (
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="text-center">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-violet-600 border-t-transparent"></div>
+            <p className="mt-4 text-gray-600">Loading your profile...</p>
+          </div>
+        </div>
+      )
+    }
+
+    // If onboarding is not complete, show onboarding page
+    if (!user.onboardingComplete) {
+      return (
+        <ProtectedRoute>
+          <Onboarding />
+        </ProtectedRoute>
+      )
+    }
+
+    // If onboarding is complete, show main app with navigation
+    const renderPage = () => {
+      switch (currentPage) {
+        case 'dashboard':
+          return <Dashboard onLogWorkout={() => setCurrentPage('log')} />
+        case 'log':
+          return <LogWorkout onSuccess={() => setCurrentPage('dashboard')} />
+        case 'plan':
+          return <Plan />
+        case 'progress':
+          return <Progress />
+        default:
+          return <Dashboard onLogWorkout={() => setCurrentPage('log')} />
+      }
+    }
+
+    return (
+      <ProtectedRoute>
+        {renderPage()}
+        <BottomNav currentPage={currentPage} onNavigate={setCurrentPage} />
+      </ProtectedRoute>
+    )
+  }
+
+  // If user is not authenticated, show welcome page or auth page
+  if (showWelcome) {
+    return <Welcome onGetStarted={() => setShowWelcome(false)} />
+  }
+
+  // Show auth page
+  return <Auth />
 }

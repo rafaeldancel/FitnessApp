@@ -104,3 +104,4 @@ apps/trpc.backup/
 # Old functions folder (if from firebase init)
 functions/
 public/
+.claude/
