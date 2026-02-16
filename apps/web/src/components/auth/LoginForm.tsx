@@ -4,10 +4,7 @@ import { useAuth } from '../../hooks/useAuth'
 
 // Inline validation schema
 const LoginSchema = z.object({
-  email: z
-    .string()
-    .min(1, 'Email is required')
-    .email('Please enter a valid email address'),
+  email: z.string().min(1, 'Email is required').email('Please enter a valid email address'),
   password: z.string().min(1, 'Password is required'),
 })
 
@@ -34,11 +31,14 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
 
   const validateField = (name: keyof LoginInput, value: string) => {
     try {
-      LoginSchema.pick({ [name]: true }).parse({ [name]: value })
-      setErrors((prev) => ({ ...prev, [name]: undefined }))
-    } catch (err: any) {
-      if (err.errors?.[0]) {
-        setErrors((prev) => ({ ...prev, [name]: err.errors[0].message }))
+      const pickMask = { [name]: true } as Partial<Record<keyof LoginInput, true>>
+      LoginSchema.pick(pickMask).parse({ [name]: value })
+      setErrors(prev => ({ ...prev, [name]: undefined }))
+    } catch (err: unknown) {
+      if (err instanceof z.ZodError) {
+        if (err.errors?.[0]) {
+          setErrors(prev => ({ ...prev, [name]: err.errors[0].message }))
+        }
       }
     }
   }
@@ -46,14 +46,14 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
 
-    setFormData((prev) => ({
+    setFormData(prev => ({
       ...prev,
       [name]: value,
     }))
 
     // Clear error when user starts typing
     if (errors[name as keyof FormErrors]) {
-      setErrors((prev) => ({ ...prev, [name]: undefined }))
+      setErrors(prev => ({ ...prev, [name]: undefined }))
     }
     setSubmitError(null)
   }
@@ -71,12 +71,14 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
     try {
       LoginSchema.parse(formData)
       setErrors({})
-    } catch (err: any) {
+    } catch (err: unknown) {
       const fieldErrors: FormErrors = {}
-      err.errors?.forEach((error: any) => {
-        const field = error.path[0] as keyof FormErrors
-        fieldErrors[field] = error.message
-      })
+      if (err instanceof z.ZodError) {
+        err.errors.forEach(error => {
+          const field = error.path[0] as keyof FormErrors
+          fieldErrors[field] = error.message
+        })
+      }
       setErrors(fieldErrors)
       return
     }
@@ -118,9 +120,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
           placeholder="you@example.com"
           disabled={isSubmitting}
         />
-        {errors.email && (
-          <p className="mt-1 text-sm text-red-600">{errors.email}</p>
-        )}
+        {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
       </div>
 
       <div>
@@ -140,9 +140,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
           placeholder="Your password"
           disabled={isSubmitting}
         />
-        {errors.password && (
-          <p className="mt-1 text-sm text-red-600">{errors.password}</p>
-        )}
+        {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password}</p>}
       </div>
 
       <button

@@ -3,21 +3,16 @@ import { z } from 'zod'
 import { useAuth } from '../../hooks/useAuth'
 
 // Simplified inline validation schema - only email and password
-const SignUpSchema = z
-  .object({
-    email: z
-      .string()
-      .min(1, 'Email is required')
-      .email('Please enter a valid email address'),
-    password: z
-      .string()
-      .min(6, 'Password must be at least 6 characters'),
-    confirmPassword: z.string().min(1, 'Please confirm your password'),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: 'Passwords do not match',
-    path: ['confirmPassword'],
-  })
+const BaseSignUpSchema = z.object({
+  email: z.string().min(1, 'Email is required').email('Please enter a valid email address'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
+  confirmPassword: z.string().min(1, 'Please confirm your password'),
+})
+
+const SignUpSchema = BaseSignUpSchema.refine(data => data.password === data.confirmPassword, {
+  message: 'Passwords do not match',
+  path: ['confirmPassword'],
+})
 
 type SignUpInput = z.infer<typeof SignUpSchema>
 
@@ -48,11 +43,14 @@ export function SignUpForm({ onSuccess }: SignUpFormProps) {
 
   const validateField = (name: keyof SignUpInput, value: unknown) => {
     try {
-      SignUpSchema.pick({ [name]: true }).parse({ [name]: value })
-      setErrors((prev) => ({ ...prev, [name]: undefined }))
-    } catch (err: any) {
-      if (err.errors?.[0]) {
-        setErrors((prev) => ({ ...prev, [name]: err.errors[0].message }))
+      const pickMask = { [name]: true } as Partial<Record<keyof SignUpInput, true>>
+      BaseSignUpSchema.pick(pickMask).parse({ [name]: value })
+      setErrors(prev => ({ ...prev, [name]: undefined }))
+    } catch (err: unknown) {
+      if (err instanceof z.ZodError) {
+        if (err.errors?.[0]) {
+          setErrors(prev => ({ ...prev, [name]: err.errors[0].message }))
+        }
       }
     }
   }
@@ -60,14 +58,14 @@ export function SignUpForm({ onSuccess }: SignUpFormProps) {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
 
-    setFormData((prev) => ({
+    setFormData(prev => ({
       ...prev,
       [name]: value,
     }))
 
     // Clear error when user starts typing
     if (errors[name as keyof FormErrors]) {
-      setErrors((prev) => ({ ...prev, [name]: undefined }))
+      setErrors(prev => ({ ...prev, [name]: undefined }))
     }
     setSubmitError(null)
   }
@@ -98,12 +96,14 @@ export function SignUpForm({ onSuccess }: SignUpFormProps) {
     try {
       SignUpSchema.parse(formData)
       setErrors({})
-    } catch (err: any) {
+    } catch (err: unknown) {
       const fieldErrors: FormErrors = {}
-      err.errors?.forEach((error: any) => {
-        const field = error.path[0] as keyof FormErrors
-        fieldErrors[field] = error.message
-      })
+      if (err instanceof z.ZodError) {
+        err.errors.forEach(error => {
+          const field = error.path[0] as keyof FormErrors
+          fieldErrors[field] = error.message
+        })
+      }
       setErrors(fieldErrors)
       return
     }
@@ -112,16 +112,16 @@ export function SignUpForm({ onSuccess }: SignUpFormProps) {
     try {
       // Stage 1: Creating account
       setSignUpStage('creating')
-      await new Promise((resolve) => setTimeout(resolve, 500)) // Show stage for 500ms
+      await new Promise(resolve => setTimeout(resolve, 500)) // Show stage for 500ms
 
       // Stage 2: Sending email (actual signup happens here)
       setSignUpStage('sending')
       await signUp(formData.email, formData.password)
-      await new Promise((resolve) => setTimeout(resolve, 500)) // Show stage for 500ms
+      await new Promise(resolve => setTimeout(resolve, 500)) // Show stage for 500ms
 
       // Stage 3: Complete
       setSignUpStage('complete')
-      await new Promise((resolve) => setTimeout(resolve, 300))
+      await new Promise(resolve => setTimeout(resolve, 300))
 
       console.log('📧 [SignUpForm] Signup successful, switching to verification view')
       onSuccess?.(formData.email)
@@ -157,9 +157,7 @@ export function SignUpForm({ onSuccess }: SignUpFormProps) {
           placeholder="you@example.com"
           disabled={isSubmitting}
         />
-        {errors.email && (
-          <p className="mt-1 text-sm text-red-600">{errors.email}</p>
-        )}
+        {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
       </div>
 
       <div>
@@ -179,9 +177,7 @@ export function SignUpForm({ onSuccess }: SignUpFormProps) {
           placeholder="At least 6 characters"
           disabled={isSubmitting}
         />
-        {errors.password && (
-          <p className="mt-1 text-sm text-red-600">{errors.password}</p>
-        )}
+        {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password}</p>}
       </div>
 
       <div>

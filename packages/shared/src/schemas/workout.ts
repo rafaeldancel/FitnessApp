@@ -1,12 +1,6 @@
 import { z } from 'zod'
 
-export const WorkoutTypeEnum = z.enum([
-  'strength',
-  'cardio',
-  'hiit',
-  'flexibility',
-  'other',
-])
+export const WorkoutTypeEnum = z.enum(['strength', 'cardio', 'hiit', 'flexibility', 'other'])
 
 export const LoggedWorkoutSchema = z.object({
   id: z.string().min(1),
@@ -18,6 +12,7 @@ export const LoggedWorkoutSchema = z.object({
   date: z.date(),
   notes: z.string().optional(),
   createdAt: z.date(),
+  sessionSource: z.string().optional(), // e.g. "daily_workout"
 })
 
 export const CreateLoggedWorkoutSchema = z.object({
@@ -27,6 +22,7 @@ export const CreateLoggedWorkoutSchema = z.object({
   calories: z.number().positive().optional(),
   date: z.date(),
   notes: z.string().optional(),
+  sessionSource: z.string().optional(),
 })
 
 export type LoggedWorkout = z.infer<typeof LoggedWorkoutSchema>

@@ -10,8 +10,11 @@ import { Auth } from './pages/Auth'
 import { Onboarding } from './pages/Onboarding'
 import { Dashboard } from './pages/Dashboard'
 import { LogWorkout } from './pages/LogWorkout'
+import type { WorkoutPrefillData } from './pages/LogWorkout'
 import { Plan } from './pages/Plan'
 import { Progress } from './pages/Progress'
+import { WorkoutDetail } from './pages/WorkoutDetail'
+import { WorkoutPlayer } from './pages/WorkoutPlayer'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { BottomNav } from './components/BottomNav'
 
@@ -19,7 +22,10 @@ export function App() {
   const { user, firebaseUser, loading } = useAuth() // ← CORRECTED: use 'user' not 'userDocument'
   const [splashComplete, setSplashComplete] = useState(false)
   const [showWelcome, setShowWelcome] = useState(true)
-  const [currentPage, setCurrentPage] = useState<'dashboard' | 'plan' | 'log' | 'progress'>('dashboard')
+  const [currentPage, setCurrentPage] = useState<
+    'dashboard' | 'plan' | 'log' | 'progress' | 'workout-detail' | 'workout-player'
+  >('dashboard')
+  const [logPrefillData, setLogPrefillData] = useState<WorkoutPrefillData | undefined>(undefined)
 
   // Show loading spinner while checking auth state (initial load)
   if (loading) {
@@ -65,22 +71,65 @@ export function App() {
     const renderPage = () => {
       switch (currentPage) {
         case 'dashboard':
-          return <Dashboard onLogWorkout={() => setCurrentPage('log')} />
+          return (
+            <Dashboard
+              onLogWorkout={() => {
+                setLogPrefillData(undefined)
+                setCurrentPage('log')
+              }}
+              onViewWorkout={() => setCurrentPage('workout-detail')}
+            />
+          )
         case 'log':
-          return <LogWorkout onSuccess={() => setCurrentPage('dashboard')} />
+          return (
+            <LogWorkout
+              onSuccess={() => {
+                setLogPrefillData(undefined)
+                setCurrentPage('dashboard')
+              }}
+              prefillData={logPrefillData}
+            />
+          )
         case 'plan':
           return <Plan />
         case 'progress':
           return <Progress />
+        case 'workout-detail':
+          return (
+            <WorkoutDetail
+              onBack={() => setCurrentPage('dashboard')}
+              onStartWorkout={() => setCurrentPage('workout-player')}
+            />
+          )
+        case 'workout-player':
+          return <WorkoutPlayer onClose={() => setCurrentPage('dashboard')} />
         default:
-          return <Dashboard onLogWorkout={() => setCurrentPage('log')} />
+          return (
+            <Dashboard
+              onLogWorkout={() => {
+                setLogPrefillData(undefined)
+                setCurrentPage('log')
+              }}
+              onViewWorkout={() => setCurrentPage('workout-detail')}
+            />
+          )
       }
     }
+
+    const showBottomNav = !['workout-detail', 'workout-player'].includes(currentPage)
 
     return (
       <ProtectedRoute>
         {renderPage()}
-        <BottomNav currentPage={currentPage} onNavigate={setCurrentPage} />
+        {showBottomNav && (
+          <BottomNav
+            currentPage={currentPage as 'dashboard' | 'plan' | 'log' | 'progress'}
+            onNavigate={page => {
+              setLogPrefillData(undefined)
+              setCurrentPage(page)
+            }}
+          />
+        )}
       </ProtectedRoute>
     )
   }

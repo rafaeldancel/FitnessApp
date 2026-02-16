@@ -105,3 +105,4 @@ apps/trpc.backup/
 functions/
 public/
 .claude/
+repro_*.js

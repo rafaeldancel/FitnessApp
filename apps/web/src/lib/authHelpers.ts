@@ -5,7 +5,7 @@ import {
   sendEmailVerification,
   type User as FirebaseUser,
 } from 'firebase/auth'
-import { doc, setDoc, getDoc, updateDoc, Timestamp } from 'firebase/firestore'
+import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore'
 import { auth, db } from './firebase'
 import type { User, FitnessGoal, Gender, HealthRestriction } from '@repo/shared/schemas'
 
@@ -13,10 +13,7 @@ import type { User, FitnessGoal, Gender, HealthRestriction } from '@repo/shared/
  * Sign up a new user with email and password, send verification email
  * Does NOT create Firestore document - that happens after email verification on first login
  */
-export async function signUpWithEmail(
-  email: string,
-  password: string
-): Promise<void> {
+export async function signUpWithEmail(email: string, password: string): Promise<void> {
   try {
     console.log('🔐 Creating Firebase Auth user...')
     // Create Firebase Auth user
@@ -30,7 +27,9 @@ export async function signUpWithEmail(
     console.log('✅ Verification email sent')
 
     if (import.meta.env.DEV) {
-      console.log('💡 Running in emulator - check http://localhost:4000 to view verification emails')
+      console.log(
+        '💡 Running in emulator - check http://localhost:4000 to view verification emails'
+      )
     }
 
     // Sign out immediately - user must verify email before signing in
@@ -46,10 +45,7 @@ export async function signUpWithEmail(
 /**
  * Sign in an existing user with email and password
  */
-export async function signInWithEmail(
-  email: string,
-  password: string
-): Promise<FirebaseUser> {
+export async function signInWithEmail(email: string, password: string): Promise<FirebaseUser> {
   try {
     const userCredential = await signInWithEmailAndPassword(auth, email, password)
     return userCredential.user
@@ -73,10 +69,7 @@ export async function signOutUser(): Promise<void> {
  * Create a minimal user document in Firestore
  * Called after email verification on first login
  */
-export async function createUserDocument(
-  userId: string,
-  email: string
-): Promise<User> {
+export async function createUserDocument(userId: string, email: string): Promise<User> {
   try {
     const userDoc: User = {
       id: userId,
@@ -121,10 +114,7 @@ export async function getUserDocument(userId: string): Promise<User | null> {
 /**
  * Resend verification email to a user
  */
-export async function resendVerificationEmail(
-  email: string,
-  password: string
-): Promise<void> {
+export async function resendVerificationEmail(email: string, password: string): Promise<void> {
   try {
     console.log('📧 Resending verification email...')
 
@@ -137,7 +127,9 @@ export async function resendVerificationEmail(
     console.log('✅ Verification email resent')
 
     if (import.meta.env.DEV) {
-      console.log('💡 Running in emulator - check http://localhost:4000 to view verification emails')
+      console.log(
+        '💡 Running in emulator - check http://localhost:4000 to view verification emails'
+      )
     }
 
     // Sign out immediately
@@ -151,10 +143,7 @@ export async function resendVerificationEmail(
 /**
  * Update user document in Firestore with partial data
  */
-export async function updateUserDocument(
-  userId: string,
-  data: Partial<User>
-): Promise<void> {
+export async function updateUserDocument(userId: string, data: Partial<User>): Promise<void> {
   try {
     console.log('📝 Updating user document:', userId, data)
     const userDocRef = doc(db, 'users', userId)
@@ -185,10 +174,7 @@ export interface OnboardingData {
 /**
  * Complete onboarding by saving all data to Firestore
  */
-export async function completeOnboarding(
-  userId: string,
-  data: OnboardingData
-): Promise<void> {
+export async function completeOnboarding(userId: string, data: OnboardingData): Promise<void> {
   try {
     console.log('📝 Completing onboarding for user:', userId)
 

@@ -4,20 +4,27 @@ import { logWorkout } from '../lib/workoutHelpers'
 import { CheckCircle2, Dumbbell } from 'lucide-react'
 import type { WorkoutType } from '@repo/shared/schemas'
 
-interface LogWorkoutProps {
-  onSuccess?: () => void
+export interface WorkoutPrefillData {
+  name?: string
+  type?: string
+  duration?: string
 }
 
-export function LogWorkout({ onSuccess }: LogWorkoutProps) {
+interface LogWorkoutProps {
+  onSuccess?: () => void
+  prefillData?: WorkoutPrefillData
+}
+
+export function LogWorkout({ onSuccess, prefillData }: LogWorkoutProps) {
   const { user } = useAuth()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const [formData, setFormData] = useState({
-    name: '',
-    type: '' as WorkoutType | '',
-    duration: '',
+    name: prefillData?.name || '',
+    type: (prefillData?.type || '') as WorkoutType | '',
+    duration: prefillData?.duration || '',
     calories: '',
     date: new Date().toISOString().split('T')[0], // YYYY-MM-DD
     notes: '',
@@ -131,7 +138,7 @@ export function LogWorkout({ onSuccess }: LogWorkoutProps) {
               id="name"
               type="text"
               value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              onChange={e => setFormData({ ...formData, name: e.target.value })}
               className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition ${
                 errors.name
                   ? 'border-red-500 focus:ring-red-600'
@@ -152,7 +159,7 @@ export function LogWorkout({ onSuccess }: LogWorkoutProps) {
             <select
               id="type"
               value={formData.type}
-              onChange={(e) => setFormData({ ...formData, type: e.target.value as WorkoutType })}
+              onChange={e => setFormData({ ...formData, type: e.target.value as WorkoutType })}
               className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition ${
                 errors.type
                   ? 'border-red-500 focus:ring-red-600'
@@ -182,7 +189,7 @@ export function LogWorkout({ onSuccess }: LogWorkoutProps) {
                 type="number"
                 min="1"
                 value={formData.duration}
-                onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
+                onChange={e => setFormData({ ...formData, duration: e.target.value })}
                 className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition ${
                   errors.duration
                     ? 'border-red-500 focus:ring-red-600'
@@ -204,7 +211,7 @@ export function LogWorkout({ onSuccess }: LogWorkoutProps) {
                 type="number"
                 min="1"
                 value={formData.calories}
-                onChange={(e) => setFormData({ ...formData, calories: e.target.value })}
+                onChange={e => setFormData({ ...formData, calories: e.target.value })}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-600 transition"
                 placeholder="300"
               />
@@ -220,7 +227,7 @@ export function LogWorkout({ onSuccess }: LogWorkoutProps) {
               id="date"
               type="date"
               value={formData.date}
-              onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+              onChange={e => setFormData({ ...formData, date: e.target.value })}
               max={new Date().toISOString().split('T')[0]}
               className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition ${
                 errors.date
@@ -242,7 +249,7 @@ export function LogWorkout({ onSuccess }: LogWorkoutProps) {
               id="notes"
               rows={4}
               value={formData.notes}
-              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+              onChange={e => setFormData({ ...formData, notes: e.target.value })}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-600 transition"
               placeholder="How did you feel? Any achievements or observations?"
             />
@@ -253,9 +260,7 @@ export function LogWorkout({ onSuccess }: LogWorkoutProps) {
             type="submit"
             disabled={isSubmitting}
             className={`w-full py-4 px-6 rounded-lg font-semibold text-white transition flex items-center justify-center gap-2 ${
-              isSubmitting
-                ? 'bg-gray-400 cursor-not-allowed'
-                : 'bg-violet-600 hover:bg-violet-700'
+              isSubmitting ? 'bg-gray-400 cursor-not-allowed' : 'bg-violet-600 hover:bg-violet-700'
             }`}
           >
             {isSubmitting ? (

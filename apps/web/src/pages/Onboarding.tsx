@@ -62,8 +62,13 @@ export function Onboarding() {
         )
       case 3: // Fitness Goals
         return formState.fitnessGoals.length > 0 && formState.fitnessGoals.length <= 5
-      case 4: { // Workout Schedule
-        if (formState.weeklyTarget === '' || formState.weeklyTarget < 1 || formState.weeklyTarget > 7) {
+      case 4: {
+        // Workout Schedule
+        if (
+          formState.weeklyTarget === '' ||
+          formState.weeklyTarget < 1 ||
+          formState.weeklyTarget > 7
+        ) {
           return false
         }
         const requiredRestDays = 7 - Number(formState.weeklyTarget)
@@ -72,8 +77,11 @@ export function Onboarding() {
       case 5: // Health Restrictions
         if (formState.hasHealthRestrictions) {
           if (formState.healthRestrictions.length === 0) return false
-          const otherRestriction = formState.healthRestrictions.find((r) => r.type === 'other')
-          if (otherRestriction && (!otherRestriction.description || otherRestriction.description.trim().length < 10)) {
+          const otherRestriction = formState.healthRestrictions.find(r => r.type === 'other')
+          if (
+            otherRestriction &&
+            (!otherRestriction.description || otherRestriction.description.trim().length < 10)
+          ) {
             return false
           }
         }
@@ -89,19 +97,11 @@ export function Onboarding() {
         return <WelcomeScreen />
       case 2:
         return (
-          <PersonalInfoScreen
-            formState={formState}
-            errors={errors}
-            onUpdateField={updateField}
-          />
+          <PersonalInfoScreen formState={formState} errors={errors} onUpdateField={updateField} />
         )
       case 3:
         return (
-          <FitnessGoalsScreen
-            formState={formState}
-            errors={errors}
-            onUpdateField={updateField}
-          />
+          <FitnessGoalsScreen formState={formState} errors={errors} onUpdateField={updateField} />
         )
       case 4:
         return (
@@ -120,13 +120,7 @@ export function Onboarding() {
           />
         )
       case 6:
-        return (
-          <SummaryScreen
-            formState={formState}
-            onEdit={goToStep}
-            onComplete={handleComplete}
-          />
-        )
+        return <SummaryScreen formState={formState} onEdit={goToStep} onComplete={handleComplete} />
       default:
         return null
     }

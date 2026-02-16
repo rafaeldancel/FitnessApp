@@ -1,10 +1,5 @@
 import { z } from 'zod'
-import {
-  GenderEnum,
-  FitnessGoalEnum,
-  HealthRestrictionTypeEnum,
-  HealthRestrictionSchema,
-} from '@repo/shared/schemas'
+import { GenderEnum, FitnessGoalEnum, HealthRestrictionSchema } from '@repo/shared/schemas'
 
 /**
  * Validation schema for Step 2: Personal Info
@@ -45,17 +40,14 @@ export const WorkoutScheduleSchema = z
       .int('Workouts per week must be a whole number')
       .min(1, 'Please select at least 1 workout per week')
       .max(7, 'Maximum is 7 workouts per week'),
-    restDays: z
-      .array(z.number().int().min(0).max(6))
-      .min(0)
-      .max(7),
+    restDays: z.array(z.number().int().min(0).max(6)).min(0).max(7),
   })
   .refine(
-    (data) => {
+    data => {
       const requiredRestDays = 7 - data.weeklyTarget
       return data.restDays.length === requiredRestDays
     },
-    (data) => {
+    data => {
       const requiredRestDays = 7 - data.weeklyTarget
       return {
         message: `Please select exactly ${requiredRestDays} rest day${requiredRestDays !== 1 ? 's' : ''}`,
@@ -73,7 +65,7 @@ export const HealthRestrictionsSchema = z
     healthRestrictions: z.array(HealthRestrictionSchema),
   })
   .refine(
-    (data) => {
+    data => {
       // If has restrictions is true, must have at least one restriction
       if (data.hasHealthRestrictions) {
         return data.healthRestrictions.length > 0
@@ -86,9 +78,9 @@ export const HealthRestrictionsSchema = z
     }
   )
   .refine(
-    (data) => {
+    data => {
       // If 'other' is selected, description must be at least 10 characters
-      const otherRestriction = data.healthRestrictions.find((r) => r.type === 'other')
+      const otherRestriction = data.healthRestrictions.find(r => r.type === 'other')
       if (otherRestriction) {
         return otherRestriction.description && otherRestriction.description.trim().length >= 10
       }

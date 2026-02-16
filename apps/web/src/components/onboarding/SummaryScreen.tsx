@@ -51,7 +51,7 @@ export function SummaryScreen({ formState, onEdit, onComplete }: SummaryScreenPr
         age: formState.age as number,
         height: formState.height as number,
         weight: formState.weight as number,
-        gender: formState.gender as any,
+        gender: formState.gender as OnboardingData['gender'],
         fitnessGoals: formState.fitnessGoals,
         weeklyTarget: formState.weeklyTarget as number,
         restDays: formState.restDays,
@@ -61,7 +61,9 @@ export function SummaryScreen({ formState, onEdit, onComplete }: SummaryScreenPr
 
       await onComplete(data)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save your profile. Please try again.')
+      setError(
+        err instanceof Error ? err.message : 'Failed to save your profile. Please try again.'
+      )
       setIsSubmitting(false)
     }
   }
@@ -70,9 +72,7 @@ export function SummaryScreen({ formState, onEdit, onComplete }: SummaryScreenPr
     <div className="space-y-6">
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 md:p-8">
         <h2 className="text-3xl font-bold text-gray-900 mb-2">Review your profile</h2>
-        <p className="text-gray-600 mb-6">
-          Everything looks good? Let's get started!
-        </p>
+        <p className="text-gray-600 mb-6">Everything looks good? Let's get started!</p>
 
         {/* Error Banner */}
         {error && (
@@ -152,13 +152,9 @@ export function SummaryScreen({ formState, onEdit, onComplete }: SummaryScreenPr
               </button>
             </div>
             <ul className="space-y-2">
-              {formState.fitnessGoals.map((goal) => (
+              {formState.fitnessGoals.map(goal => (
                 <li key={goal} className="flex items-center gap-2 text-sm text-gray-700">
-                  <svg
-                    className="w-4 h-4 text-violet-600"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
+                  <svg className="w-4 h-4 text-violet-600" fill="currentColor" viewBox="0 0 20 20">
                     <path
                       fillRule="evenodd"
                       d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
@@ -192,7 +188,7 @@ export function SummaryScreen({ formState, onEdit, onComplete }: SummaryScreenPr
                   <div className="flex flex-wrap gap-2">
                     {formState.restDays
                       .sort((a, b) => a - b)
-                      .map((day) => (
+                      .map(day => (
                         <span
                           key={day}
                           className="px-2 py-1 bg-violet-100 text-violet-700 rounded text-xs font-medium"
