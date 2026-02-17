@@ -163,7 +163,8 @@ a:hover {
 }
 
 @keyframes pulse-glow {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 0.3;
     transform: scale(1);
   }
@@ -178,10 +179,31 @@ a:hover {
 }
 
 /* Welcome Page Animations */
-@keyframes slide-up {
+.animate-slide-up {
+  animation: slide-up 0.6s ease-out;
+}
+
+/* Exit Animations */
+@keyframes fade-out-up {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+}
+
+.animate-fade-out-up {
+  animation: fade-out-up 0.3s ease-in forwards;
+}
+
+/* Staggered Entry Animations */
+@keyframes slide-up-fade {
   from {
     opacity: 0;
-    transform: translateY(30px);
+    transform: translateY(20px);
   }
   to {
     opacity: 1;
@@ -189,6 +211,22 @@ a:hover {
   }
 }
 
-.animate-slide-up {
-  animation: slide-up 0.6s ease-out;
+.animate-slide-up-fade {
+  animation: slide-up-fade 0.7s ease-out forwards;
+}
+
+/* Zoom In Fade In */
+@keyframes zoom-in-fade {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-zoom-in-fade {
+  animation: zoom-in-fade 0.7s ease-out forwards;
 }

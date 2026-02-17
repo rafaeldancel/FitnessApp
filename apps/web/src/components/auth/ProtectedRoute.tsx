@@ -1,12 +1,12 @@
-import { type ReactNode } from 'react'
-import { useAuth } from '../hooks/useAuth'
+import { type ReactNode } from 'react';
+import { useAuth } from '../../hooks/useAuth';
 
 interface ProtectedRouteProps {
-  children: ReactNode
+  children: ReactNode;
 }
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { user, loading } = useAuth()
+  const { user, loading } = useAuth();
 
   if (loading) {
     return (
@@ -16,12 +16,12 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
           <p className="mt-4 text-gray-600">Loading...</p>
         </div>
       </div>
-    )
+    );
   }
 
   if (!user) {
-    return null
+    return null;
   }
 
-  return <>{children}</>
+  return <>{children}</>;
 }

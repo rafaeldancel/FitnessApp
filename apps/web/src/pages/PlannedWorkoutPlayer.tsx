@@ -1,28 +1,47 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useAuth } from '../hooks/useAuth';
-import { generateTodaysWorkout } from '../lib/workoutGenerator';
-import type { Exercise } from '../types';
-import { logWorkoutSession } from '../lib/workoutHelpers';
+import { getPlannedWorkoutById, markPlannedWorkoutComplete } from '../lib/workoutHelpers';
+import { logWorkout } from '../lib/workoutHelpers';
 import { CheckCircle2, Loader2, Pause, Play, SkipBack, SkipForward, X } from 'lucide-react';
+import type { PlannedWorkout } from '../types';
 
-interface WorkoutPlayerProps {
+interface PlannedWorkoutPlayerProps {
+  workoutId: string;
   onClose: () => void;
 }
 
+interface ExerciseItem {
+  id: string;
+  name: string;
+  muscleGroups: string[];
+  defaultSets?: number;
+  defaultReps?: string;
+  durationMinutes?: number;
+  category?: string;
+}
+
+type Phase = 'warmup' | 'main' | 'cooldown';
+
+interface FlatExercise {
+  exercise: ExerciseItem;
+  phase: Phase;
+  indexInPhase: number;
+  phaseTotal: number;
+}
+
 // Extract a time in seconds from the defaultReps field
-function parseExerciseDuration(exercise: Exercise): number {
+function parseExerciseDuration(exercise: ExerciseItem): number {
   const reps = exercise.defaultReps || '';
 
-  // 1) Timed exercises: patterns like "30 sec", "60 sec", "45-60 sec", "45 sec each side"
+  // 1) Timed exercises: "30 sec", "60 sec", "45-60 sec", "45 sec each side"
   const secMatch = reps.match(/(\d+)\s*sec/);
   if (secMatch) {
     const baseSec = parseInt(secMatch[1], 10);
-    // Multiply by sets if > 1 set (e.g. 3 sets × 30 sec)
     const sets = exercise.defaultSets || 1;
     return baseSec * sets;
   }
 
-  // 2) Minute-based exercises: "20 min", "3 min rounds", "2 min on / 30 sec rest"
+  // 2) Minute-based exercises: "20 min", "3 min rounds"
   const minMatch = reps.match(/(\d+)\s*min/);
   if (minMatch) {
     const baseMin = parseInt(minMatch[1], 10);
@@ -30,9 +49,8 @@ function parseExerciseDuration(exercise: Exercise): number {
     return baseMin * 60 * sets;
   }
 
-  // 3) Set-based exercises (e.g. "8-10", "12-15", "10 each leg")
-  //    Use the exercise's own durationMinutes estimate converted to seconds
-  if (exercise.durationMinutes > 0) {
+  // 3) Set-based exercises — use durationMinutes estimate
+  if (exercise.durationMinutes && exercise.durationMinutes > 0) {
     return exercise.durationMinutes * 60;
   }
 
@@ -40,66 +58,65 @@ function parseExerciseDuration(exercise: Exercise): number {
   return 60;
 }
 
-type Phase = 'warmup' | 'main' | 'cooldown';
-
-interface FlatExercise {
-  exercise: Exercise;
-  phase: Phase;
-  indexInPhase: number;
-  phaseTotal: number;
-}
-
-export function WorkoutPlayer({ onClose }: WorkoutPlayerProps) {
+export function PlannedWorkoutPlayer({ workoutId, onClose }: PlannedWorkoutPlayerProps) {
   const { user } = useAuth();
+  const [workout, setWorkout] = useState<PlannedWorkout | null>(null);
+  const [loadingWorkout, setLoadingWorkout] = useState(true);
 
-  const session = useMemo(() => {
-    return generateTodaysWorkout(
-      (user?.fitnessGoals || []) as any,
-      user?.restDays || [],
-      (user?.healthRestrictions || []) as any
-    );
-  }, [user?.fitnessGoals, user?.restDays, user?.healthRestrictions]);
+  useEffect(() => {
+    if (!workoutId) return;
+    setLoadingWorkout(true);
+    getPlannedWorkoutById(workoutId)
+      .then(setWorkout)
+      .finally(() => setLoadingWorkout(false));
+  }, [workoutId]);
 
-  // Flatten all exercises into a single ordered list
+  // Group exercises into phases
   const allExercises: FlatExercise[] = useMemo(() => {
+    if (!workout?.exercises) return [];
+
+    const warmup: ExerciseItem[] = [];
+    const main: ExerciseItem[] = [];
+    const cooldown: ExerciseItem[] = [];
+
+    workout.exercises.forEach((ex: ExerciseItem, idx: number) => {
+      const item: ExerciseItem = {
+        id: ex.id || `ex-${idx}`,
+        name: ex.name || 'Unknown Exercise',
+        muscleGroups: ex.muscleGroups || [],
+        defaultSets: ex.defaultSets,
+        defaultReps: ex.defaultReps,
+        durationMinutes: ex.durationMinutes,
+        category: ex.category,
+      };
+      if (ex.category === 'warmup') warmup.push(item);
+      else if (ex.category === 'cooldown') cooldown.push(item);
+      else main.push(item);
+    });
+
     const list: FlatExercise[] = [];
-    session.warmup.forEach((e, i) =>
-      list.push({
-        exercise: e,
-        phase: 'warmup',
-        indexInPhase: i,
-        phaseTotal: session.warmup.length,
-      })
+    warmup.forEach((e, i) =>
+      list.push({ exercise: e, phase: 'warmup', indexInPhase: i, phaseTotal: warmup.length })
     );
-    session.mainExercises.forEach((e, i) =>
-      list.push({
-        exercise: e,
-        phase: 'main',
-        indexInPhase: i,
-        phaseTotal: session.mainExercises.length,
-      })
+    main.forEach((e, i) =>
+      list.push({ exercise: e, phase: 'main', indexInPhase: i, phaseTotal: main.length })
     );
-    session.cooldown.forEach((e, i) =>
-      list.push({
-        exercise: e,
-        phase: 'cooldown',
-        indexInPhase: i,
-        phaseTotal: session.cooldown.length,
-      })
+    cooldown.forEach((e, i) =>
+      list.push({ exercise: e, phase: 'cooldown', indexInPhase: i, phaseTotal: cooldown.length })
     );
     return list;
-  }, [session]);
+  }, [workout]);
 
   const totalExercises = allExercises.length;
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isResting, setIsResting] = useState(false);
   const [timeLeft, setTimeLeft] = useState(0);
-  const [isRunning, setIsRunning] = useState(true);
+  const [isRunning, setIsRunning] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
   const [isLogging, setIsLogging] = useState(false);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
-  const [exerciseTransition, setExerciseTransition] = useState<'enter' | 'exit' | 'idle'>('enter');
+  const [exerciseTransition, setExerciseTransition] = useState<'enter' | 'exit' | 'idle'>('idle');
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const elapsedRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -128,21 +145,24 @@ export function WorkoutPlayer({ onClose }: WorkoutPlayerProps) {
     [allExercises]
   );
 
-  // Initialize first exercise
+  // Initialize first exercise once workout loads
   useEffect(() => {
-    startTimeRef.current = Date.now();
-    initTimer(0);
-  }, [initTimer]);
+    if (allExercises.length > 0 && !loadingWorkout) {
+      startTimeRef.current = Date.now();
+      initTimer(0);
+    }
+  }, [allExercises.length, loadingWorkout, initTimer]);
 
   // Elapsed time tracker
   useEffect(() => {
+    if (loadingWorkout || allExercises.length === 0) return;
     elapsedRef.current = setInterval(() => {
       setElapsedSeconds(Math.floor((Date.now() - startTimeRef.current) / 1000));
     }, 1000);
     return () => {
       if (elapsedRef.current) clearInterval(elapsedRef.current);
     };
-  }, []);
+  }, [loadingWorkout, allExercises.length]);
 
   // Timer countdown
   useEffect(() => {
@@ -156,9 +176,7 @@ export function WorkoutPlayer({ onClose }: WorkoutPlayerProps) {
       setTimeLeft((prev) => {
         if (prev <= 1) {
           clearInterval(intervalRef.current!);
-          // Timer hit 0
           if (isResting) {
-            // Rest done → Next exercise
             const nextIdx = currentIndex + 1;
             if (nextIdx >= totalExercises) {
               setIsComplete(true);
@@ -167,12 +185,11 @@ export function WorkoutPlayer({ onClose }: WorkoutPlayerProps) {
               initTimer(nextIdx);
             }
           } else {
-            // Exercise done → start rest (unless last exercise)
             if (currentIndex >= totalExercises - 1) {
               setIsComplete(true);
             } else {
               setIsResting(true);
-              setTimeLeft(30); // 30 second rest
+              setTimeLeft(30);
               setIsRunning(true);
             }
           }
@@ -219,15 +236,37 @@ export function WorkoutPlayer({ onClose }: WorkoutPlayerProps) {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // Timer circle progress (SVG)
+  // Loading state
+  if (loadingWorkout || allExercises.length === 0) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-violet-900 via-violet-800 to-purple-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-violet-400 border-t-transparent"></div>
+          <p className="mt-4 text-violet-200">Loading workout...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Timer circle progress
   const maxTime = isResting
     ? 30
     : parseExerciseDuration(current?.exercise || allExercises[0].exercise);
   const progress = maxTime > 0 ? ((maxTime - timeLeft) / maxTime) * 100 : 0;
-  const circumference = 2 * Math.PI * 54; // radius 54
+  const circumference = 2 * Math.PI * 54;
   const strokeDashoffset = circumference - (progress / 100) * circumference;
 
-  // Determine workout type for pre-fill (map from exercise categories) - REMOVED (unused)
+  // Determine workout type for logging
+  function mapCategory(
+    cat: string | undefined
+  ): 'strength' | 'cardio' | 'hiit' | 'flexibility' | 'other' {
+    if (['strength', 'cardio', 'hiit', 'flexibility', 'other'].includes(cat || '')) {
+      return cat as 'strength' | 'cardio' | 'hiit' | 'flexibility' | 'other';
+    }
+    if (cat === 'compound') return 'strength';
+    if (cat === 'warmup' || cat === 'cooldown') return 'flexibility';
+    return 'other';
+  }
 
   // Completion screen
   if (isComplete) {
@@ -259,7 +298,7 @@ export function WorkoutPlayer({ onClose }: WorkoutPlayerProps) {
 
           <div className="bg-white/10 backdrop-blur rounded-xl p-6 mb-8 border border-white/20">
             <p className="text-sm text-violet-300 mb-3 uppercase tracking-wider font-medium">
-              {session.name}
+              {workout?.name || 'Planned Workout'}
             </p>
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -279,27 +318,36 @@ export function WorkoutPlayer({ onClose }: WorkoutPlayerProps) {
           <div className="space-y-3 w-full max-w-xs mx-auto">
             <button
               onClick={async () => {
-                if (!user?.id) return;
+                if (!user?.id || !workout?.id) return;
                 try {
                   setIsLogging(true);
-                  // Collect all exercises to log
-                  const exercisesToLog = allExercises.map((item) => {
-                    const durationMinutes = parseExerciseDuration(item.exercise) / 60;
-                    const cpm = item.exercise.caloriesPerMinute || 5;
-                    const calories = Math.round(durationMinutes * cpm);
-
-                    return {
+                  // Log each exercise individually
+                  const now = new Date();
+                  const logPromises = allExercises.map((item) =>
+                    logWorkout(user.id, {
                       name: item.exercise.name,
-                      type: item.exercise.category, // Pass the category as type
-                      duration: durationMinutes, // Convert seconds to minutes
-                      calories,
-                    };
-                  });
+                      type: mapCategory(item.exercise.category),
+                      duration: Math.max(1, Math.round(parseExerciseDuration(item.exercise) / 60)),
+                      date: now,
+                      notes: `Completed via Planned Workout: ${workout.name}`,
+                      sessionSource: 'planned_workout',
+                    })
+                  );
 
-                  await logWorkoutSession(user.id, exercisesToLog, session.name);
+                  try {
+                    await Promise.all(logPromises);
+                    console.log('✅ All planned exercises logged');
+                  } catch (error) {
+                    console.error('⚠️ Some exercises failed to log:', error);
+                  }
+
+                  // Mark planned workout as completed
+                  await markPlannedWorkoutComplete(workout.id!);
+                  console.log('✅ Planned workout marked complete');
+
                   onClose(); // Return to dashboard
                 } catch (error) {
-                  console.error('Failed to log session:', error);
+                  console.error('Failed to log planned session:', error);
                   setIsLogging(false);
                 }
               }}

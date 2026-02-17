@@ -18,7 +18,7 @@ export function Splash({ onComplete, isAuthenticated }: SplashProps) {
   }, [onComplete, isAuthenticated])
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-violet-600 to-purple-700 flex items-center justify-center animate-fade-in">
+    <div className="fixed inset-0 z-50 bg-gradient-to-br from-violet-600 to-purple-700 flex items-center justify-center animate-fade-in">
       <div className="text-center">
         {/* Lightning Bolt Icon */}
         <div className="inline-block animate-scale-up-bounce mb-6">
@@ -33,10 +33,7 @@ export function Splash({ onComplete, isAuthenticated }: SplashProps) {
                 xmlns="http://www.w3.org/2000/svg"
                 className="text-white opacity-30 blur-xl"
               >
-                <path
-                  d="M13 2L3 14h8l-1 8 10-12h-8l1-8z"
-                  fill="currentColor"
-                />
+                <path d="M13 2L3 14h8l-1 8 10-12h-8l1-8z" fill="currentColor" />
               </svg>
             </div>
             {/* Main icon */}

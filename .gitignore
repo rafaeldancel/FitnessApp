@@ -106,3 +106,6 @@ functions/
 public/
 .claude/
 repro_*.js
+tsc_errors*.txt
+tsc_output.txt
+test_output.txt

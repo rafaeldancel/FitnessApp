@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import { logWorkout } from '../lib/workoutHelpers'
-import { CheckCircle2, Dumbbell } from 'lucide-react'
+import { CheckCircle2, Dumbbell, Calendar } from 'lucide-react'
 import type { WorkoutType } from '@repo/shared/schemas'
 
 export interface WorkoutPrefillData {
@@ -14,6 +14,14 @@ interface LogWorkoutProps {
   onSuccess?: () => void
   prefillData?: WorkoutPrefillData
 }
+
+const WORKOUT_TYPES: { value: WorkoutType; label: string; emoji: string }[] = [
+  { value: 'strength', label: 'Strength', emoji: '💪' },
+  { value: 'cardio', label: 'Cardio', emoji: '🏃' },
+  { value: 'hiit', label: 'HIIT', emoji: '🔥' },
+  { value: 'flexibility', label: 'Yoga', emoji: '🧘' },
+  { value: 'other', label: 'Other', emoji: '➡️' },
+]
 
 export function LogWorkout({ onSuccess, prefillData }: LogWorkoutProps) {
   const { user } = useAuth()
@@ -98,21 +106,34 @@ export function LogWorkout({ onSuccess, prefillData }: LogWorkoutProps) {
     }
   }
 
+  const inputBase =
+    'w-full h-12 px-4 border border-gray-200 bg-gray-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition text-gray-900'
+  const inputError =
+    'w-full h-12 px-4 border border-red-400 bg-gray-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition text-gray-900'
+
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-violet-600 to-purple-800 text-white py-8 px-4">
-        <div className="max-w-lg mx-auto">
-          <h1 className="text-3xl font-bold mb-2">Log Workout</h1>
-          <p className="text-violet-100">Record your training session</p>
-        </div>
+    <div className="min-h-screen bg-[#FAFAFA] pb-28">
+      {/* Hero Section */}
+      <div className="bg-gradient-to-br from-violet-500 to-violet-700 text-white px-5 pt-10 pb-16 rounded-b-3xl">
+        <svg
+          width="40"
+          height="40"
+          viewBox="0 0 24 24"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          className="text-white mb-4"
+        >
+          <path d="M13 2L3 14h8l-1 8 10-12h-8l1-8z" fill="currentColor" />
+        </svg>
+        <h1 className="text-2xl font-bold mb-1">Log Workout</h1>
+        <p className="text-violet-200 text-sm font-medium">Record your training session</p>
       </div>
 
-      {/* Form */}
-      <div className="max-w-lg mx-auto px-4 py-8">
+      {/* Form Card — overlaps hero */}
+      <div className="px-4 -mt-6 relative z-10">
         {/* Success Message */}
         {showSuccess && (
-          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center gap-3 animate-fade-in">
+          <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-2xl flex items-center gap-3 animate-fade-in">
             <CheckCircle2 className="w-6 h-6 text-green-600 flex-shrink-0" />
             <div>
               <p className="font-medium text-green-900">Workout logged successfully!</p>
@@ -123,134 +144,141 @@ export function LogWorkout({ onSuccess, prefillData }: LogWorkoutProps) {
 
         {/* Error Message */}
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-2xl">
             <p className="text-sm text-red-800">{error}</p>
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-sm p-6 space-y-6">
+        <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-md p-6 space-y-5">
           {/* Workout Name */}
           <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-              Workout Name *
+            <label htmlFor="name" className="block text-sm font-semibold text-gray-800 mb-1.5">
+              Workout Name
             </label>
-            <input
-              id="name"
-              type="text"
-              value={formData.name}
-              onChange={e => setFormData({ ...formData, name: e.target.value })}
-              className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition ${
-                errors.name
-                  ? 'border-red-500 focus:ring-red-600'
-                  : 'border-gray-300 focus:ring-violet-600'
-              }`}
-              placeholder="e.g., Morning Run, Chest Day"
-            />
-            {errors.name && (
-              <p className="mt-1 text-sm text-red-600 animate-fade-in">{errors.name}</p>
-            )}
-          </div>
-
-          {/* Workout Type */}
-          <div>
-            <label htmlFor="type" className="block text-sm font-medium text-gray-700 mb-2">
-              Workout Type *
-            </label>
-            <select
-              id="type"
-              value={formData.type}
-              onChange={e => setFormData({ ...formData, type: e.target.value as WorkoutType })}
-              className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition ${
-                errors.type
-                  ? 'border-red-500 focus:ring-red-600'
-                  : 'border-gray-300 focus:ring-violet-600'
-              }`}
-            >
-              <option value="">Select type</option>
-              <option value="strength">Strength</option>
-              <option value="cardio">Cardio</option>
-              <option value="hiit">HIIT</option>
-              <option value="flexibility">Flexibility</option>
-              <option value="other">Other</option>
-            </select>
-            {errors.type && (
-              <p className="mt-1 text-sm text-red-600 animate-fade-in">{errors.type}</p>
-            )}
-          </div>
-
-          {/* Duration and Calories */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="duration" className="block text-sm font-medium text-gray-700 mb-2">
-                Duration (min) *
-              </label>
+            <div className="relative">
+              <Dumbbell className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
-                id="duration"
-                type="number"
-                min="1"
-                value={formData.duration}
-                onChange={e => setFormData({ ...formData, duration: e.target.value })}
-                className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition ${
-                  errors.duration
-                    ? 'border-red-500 focus:ring-red-600'
-                    : 'border-gray-300 focus:ring-violet-600'
-                }`}
-                placeholder="30"
+                id="name"
+                type="text"
+                value={formData.name}
+                onChange={e => setFormData({ ...formData, name: e.target.value })}
+                className={`${errors.name ? inputError : inputBase} pl-10`}
+                placeholder="e.g., Morning Run"
               />
+            </div>
+            {errors.name && (
+              <p className="mt-1 text-xs text-red-600 animate-fade-in">{errors.name}</p>
+            )}
+          </div>
+
+          {/* Workout Type — Pill Buttons */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-800 mb-1.5">Workout Type</label>
+            <div className="flex flex-wrap gap-2">
+              {WORKOUT_TYPES.map(wt => (
+                <button
+                  key={wt.value}
+                  type="button"
+                  onClick={() => setFormData({ ...formData, type: wt.value })}
+                  className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
+                    formData.type === wt.value
+                      ? 'bg-violet-600 text-white shadow-sm'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  {wt.label} {wt.emoji}
+                </button>
+              ))}
+            </div>
+            {errors.type && (
+              <p className="mt-1 text-xs text-red-600 animate-fade-in">{errors.type}</p>
+            )}
+          </div>
+
+          {/* Duration & Calories — side by side */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label
+                htmlFor="duration"
+                className="block text-sm font-semibold text-gray-800 mb-1.5"
+              >
+                Duration
+              </label>
+              <div className="relative">
+                <input
+                  id="duration"
+                  type="number"
+                  min="1"
+                  value={formData.duration}
+                  onChange={e => setFormData({ ...formData, duration: e.target.value })}
+                  className={`${errors.duration ? inputError : inputBase} pr-12`}
+                  placeholder="30"
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-400 font-medium pointer-events-none">
+                  min
+                </span>
+              </div>
               {errors.duration && (
-                <p className="mt-1 text-sm text-red-600 animate-fade-in">{errors.duration}</p>
+                <p className="mt-1 text-xs text-red-600 animate-fade-in">{errors.duration}</p>
               )}
             </div>
 
             <div>
-              <label htmlFor="calories" className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="calories"
+                className="block text-sm font-semibold text-gray-800 mb-1.5"
+              >
                 Calories
               </label>
-              <input
-                id="calories"
-                type="number"
-                min="1"
-                value={formData.calories}
-                onChange={e => setFormData({ ...formData, calories: e.target.value })}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-600 transition"
-                placeholder="300"
-              />
+              <div className="relative">
+                <input
+                  id="calories"
+                  type="number"
+                  min="1"
+                  value={formData.calories}
+                  onChange={e => setFormData({ ...formData, calories: e.target.value })}
+                  className={`${inputBase} pr-14`}
+                  placeholder="300"
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-400 font-medium pointer-events-none">
+                  kcal
+                </span>
+              </div>
             </div>
           </div>
 
           {/* Date */}
           <div>
-            <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-2">
-              Date *
+            <label htmlFor="date" className="block text-sm font-semibold text-gray-800 mb-1.5">
+              Date
             </label>
-            <input
-              id="date"
-              type="date"
-              value={formData.date}
-              onChange={e => setFormData({ ...formData, date: e.target.value })}
-              max={new Date().toISOString().split('T')[0]}
-              className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition ${
-                errors.date
-                  ? 'border-red-500 focus:ring-red-600'
-                  : 'border-gray-300 focus:ring-violet-600'
-              }`}
-            />
+            <div className="relative">
+              <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <input
+                id="date"
+                type="date"
+                value={formData.date}
+                onChange={e => setFormData({ ...formData, date: e.target.value })}
+                max={new Date().toISOString().split('T')[0]}
+                className={`${errors.date ? inputError : inputBase} pl-10`}
+              />
+            </div>
             {errors.date && (
-              <p className="mt-1 text-sm text-red-600 animate-fade-in">{errors.date}</p>
+              <p className="mt-1 text-xs text-red-600 animate-fade-in">{errors.date}</p>
             )}
           </div>
 
           {/* Notes */}
           <div>
-            <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="notes" className="block text-sm font-semibold text-gray-800 mb-1.5">
               Notes
             </label>
             <textarea
               id="notes"
-              rows={4}
+              rows={3}
               value={formData.notes}
               onChange={e => setFormData({ ...formData, notes: e.target.value })}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-600 transition"
+              className="w-full px-4 py-3 border border-gray-200 bg-gray-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition text-gray-900 resize-none"
               placeholder="How did you feel? Any achievements or observations?"
             />
           </div>
@@ -259,8 +287,10 @@ export function LogWorkout({ onSuccess, prefillData }: LogWorkoutProps) {
           <button
             type="submit"
             disabled={isSubmitting}
-            className={`w-full py-4 px-6 rounded-lg font-semibold text-white transition flex items-center justify-center gap-2 ${
-              isSubmitting ? 'bg-gray-400 cursor-not-allowed' : 'bg-violet-600 hover:bg-violet-700'
+            className={`w-full h-14 rounded-xl font-bold text-white text-base transition-all shadow-md flex items-center justify-center gap-2 ${
+              isSubmitting
+                ? 'bg-gray-400 cursor-not-allowed'
+                : 'bg-violet-600 hover:bg-violet-700 active:bg-violet-800'
             }`}
           >
             {isSubmitting ? (
@@ -269,10 +299,7 @@ export function LogWorkout({ onSuccess, prefillData }: LogWorkoutProps) {
                 <span>Logging Workout...</span>
               </>
             ) : (
-              <>
-                <Dumbbell className="w-5 h-5" />
-                <span>Log Workout</span>
-              </>
+              <span>Log Workout ✅</span>
             )}
           </button>
         </form>

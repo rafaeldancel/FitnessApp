@@ -1,46 +1,66 @@
-import { useState, useEffect, useMemo } from 'react'
-import { useAuth } from '../hooks/useAuth'
-import { generateTodaysWorkout } from '../lib/workoutGenerator'
-import { checkSessionCompletion } from '../lib/workoutHelpers'
-import { ArrowLeft, CheckCircle2, Play } from 'lucide-react'
+import { useState, useEffect } from 'react';
+import { getPlannedWorkoutById } from '../lib/workoutHelpers';
+import { ArrowLeft, CheckCircle2, Play } from 'lucide-react';
+import type { PlannedWorkout } from '../types';
 
-interface WorkoutDetailProps {
-  onBack: () => void
-  onStartWorkout: () => void
+interface PlannedWorkoutDetailProps {
+  workoutId: string;
+  onBack: () => void;
+  onStartWorkout: () => void;
 }
 
-export function WorkoutDetail({ onBack, onStartWorkout }: WorkoutDetailProps) {
-  const { user } = useAuth()
+interface ExerciseItem {
+  id: string;
+  name: string;
+  muscleGroups: string[];
+  defaultSets?: number;
+  defaultReps?: string;
+  durationMinutes?: number;
+  category?: string;
+}
 
-  const session = useMemo(() => {
-    return generateTodaysWorkout(
-      user?.fitnessGoals || [],
-      user?.restDays || [],
-      user?.healthRestrictions || []
-    )
-  }, [user?.fitnessGoals, user?.restDays, user?.healthRestrictions])
-
-  const [isCompleted, setIsCompleted] = useState(false)
+export function PlannedWorkoutDetail({
+  workoutId,
+  onBack,
+  onStartWorkout,
+}: PlannedWorkoutDetailProps) {
+  const [workout, setWorkout] = useState<PlannedWorkout | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (user?.id) {
-      checkSessionCompletion(user.id).then(setIsCompleted)
-    }
-  }, [user?.id])
+    if (!workoutId) return;
+    setLoading(true);
+    getPlannedWorkoutById(workoutId)
+      .then(setWorkout)
+      .finally(() => setLoading(false));
+  }, [workoutId]);
+
+  const isCompleted = workout?.completed ?? false;
+
+  // Group exercises by category into warmup, main, cooldown sections
+  const warmup: ExerciseItem[] = [];
+  const mainExercises: ExerciseItem[] = [];
+  const cooldown: ExerciseItem[] = [];
+
+  if (workout?.exercises) {
+    workout.exercises.forEach((ex: ExerciseItem, idx: number) => {
+      const item: ExerciseItem = {
+        id: ex.id || `ex-${idx}`,
+        name: ex.name || 'Unknown Exercise',
+        muscleGroups: ex.muscleGroups || [],
+        defaultSets: ex.defaultSets,
+        defaultReps: ex.defaultReps,
+        durationMinutes: ex.durationMinutes,
+        category: ex.category,
+      };
+      if (ex.category === 'warmup') warmup.push(item);
+      else if (ex.category === 'cooldown') cooldown.push(item);
+      else mainExercises.push(item);
+    });
+  }
 
   // Shared exercise row renderer
-  const renderExercise = (
-    ex: {
-      id: string
-      name: string
-      muscleGroups: string[]
-      defaultSets?: number
-      defaultReps?: string
-      durationMinutes?: number
-    },
-    borderColor: string,
-    isLast: boolean
-  ) => (
+  const renderExercise = (ex: ExerciseItem, borderColor: string, isLast: boolean) => (
     <div
       key={ex.id}
       className={`flex items-center gap-3 py-4 px-4 border-l-[3px] ${borderColor} ${
@@ -63,11 +83,35 @@ export function WorkoutDetail({ onBack, onStartWorkout }: WorkoutDetailProps) {
       </div>
       <span className="text-sm text-gray-500 whitespace-nowrap font-medium">
         {ex.defaultSets && ex.defaultReps
-          ? `${ex.defaultSets} x ${ex.defaultReps}`
+          ? `${ex.defaultSets} × ${ex.defaultReps}`
           : `${ex.durationMinutes}m`}
       </span>
     </div>
-  )
+  );
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#FAFAFA] flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-violet-600 border-t-transparent"></div>
+          <p className="mt-4 text-gray-600">Loading workout...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!workout) {
+    return (
+      <div className="min-h-screen bg-[#FAFAFA] flex flex-col items-center justify-center px-6">
+        <p className="text-gray-500 text-lg mb-4">Workout not found</p>
+        <button onClick={onBack} className="text-violet-600 font-semibold">
+          ← Back to Dashboard
+        </button>
+      </div>
+    );
+  }
+
+  const typeLabel = workout.type.replace('_', ' ');
 
   return (
     <div className="min-h-screen bg-[#FAFAFA] pb-24">
@@ -82,7 +126,7 @@ export function WorkoutDetail({ onBack, onStartWorkout }: WorkoutDetailProps) {
             >
               <ArrowLeft className="w-5 h-5 text-white" />
             </button>
-            <h1 className="text-base font-semibold text-white">Today&apos;s Workout</h1>
+            <h1 className="text-base font-semibold text-white">Planned Workout</h1>
           </div>
         </div>
 
@@ -98,13 +142,13 @@ export function WorkoutDetail({ onBack, onStartWorkout }: WorkoutDetailProps) {
           >
             <path d="M13 2L3 14h8l-1 8 10-12h-8l1-8z" fill="currentColor" />
           </svg>
-          <h2 className="text-2xl font-extrabold mb-3">{session.name}</h2>
+          <h2 className="text-2xl font-extrabold mb-3">{workout.name}</h2>
           <div className="flex items-center justify-center gap-2">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-sm font-medium">
-              {session.goalLabel}
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-sm font-medium capitalize">
+              📋 {typeLabel}
             </span>
             <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-sm font-medium">
-              🕐 ~{session.totalDuration} min
+              🕐 ~{workout.duration} min
             </span>
           </div>
         </div>
@@ -124,52 +168,82 @@ export function WorkoutDetail({ onBack, onStartWorkout }: WorkoutDetailProps) {
           )}
 
           {/* Warm-Up Section */}
-          {session.warmup.length > 0 && (
+          {warmup.length > 0 && (
             <div>
               <div className="bg-amber-100 rounded-lg py-2.5 px-4 mb-2">
                 <span className="text-base font-semibold text-amber-700">
-                  🔥 Warm-Up - {session.warmup.length} exercises
+                  🔥 Warm-Up - {warmup.length} exercises
                 </span>
               </div>
               <div>
-                {session.warmup.map((ex, i) =>
-                  renderExercise(ex, 'border-amber-400', i === session.warmup.length - 1)
+                {warmup.map((ex, i) =>
+                  renderExercise(ex, 'border-amber-400', i === warmup.length - 1)
                 )}
               </div>
             </div>
           )}
 
           {/* Main Workout Section */}
-          {session.mainExercises.length > 0 && (
+          {mainExercises.length > 0 && (
             <div>
               <div className="bg-violet-100 rounded-lg py-2.5 px-4 mb-2">
                 <span className="text-base font-semibold text-violet-700">
-                  💪 Main Workout - {session.mainExercises.length} exercises
+                  💪 Main Workout - {mainExercises.length} exercises
                 </span>
               </div>
               <div>
-                {session.mainExercises.map((ex, i) =>
-                  renderExercise(ex, 'border-violet-400', i === session.mainExercises.length - 1)
+                {mainExercises.map((ex, i) =>
+                  renderExercise(ex, 'border-violet-400', i === mainExercises.length - 1)
                 )}
               </div>
             </div>
           )}
 
           {/* Cool-Down Section */}
-          {session.cooldown.length > 0 && (
+          {cooldown.length > 0 && (
             <div>
               <div className="bg-blue-100 rounded-lg py-2.5 px-4 mb-2">
                 <span className="text-base font-semibold text-blue-700">
-                  🧊 Cool-Down - {session.cooldown.length} exercises
+                  🧊 Cool-Down - {cooldown.length} exercises
                 </span>
               </div>
               <div>
-                {session.cooldown.map((ex, i) =>
-                  renderExercise(ex, 'border-blue-400', i === session.cooldown.length - 1)
+                {cooldown.map((ex, i) =>
+                  renderExercise(ex, 'border-blue-400', i === cooldown.length - 1)
                 )}
               </div>
             </div>
           )}
+
+          {/* Fallback: if no categories, show all as "Exercises" */}
+          {warmup.length === 0 &&
+            mainExercises.length === 0 &&
+            cooldown.length === 0 &&
+            workout.exercises.length > 0 && (
+              <div>
+                <div className="bg-violet-100 rounded-lg py-2.5 px-4 mb-2">
+                  <span className="text-base font-semibold text-violet-700">
+                    💪 Exercises - {workout.exercises.length} total
+                  </span>
+                </div>
+                <div>
+                  {(workout.exercises as ExerciseItem[]).map((ex, i) =>
+                    renderExercise(
+                      {
+                        id: ex.id || `ex-${i}`,
+                        name: ex.name || 'Exercise',
+                        muscleGroups: ex.muscleGroups || [],
+                        defaultSets: ex.defaultSets,
+                        defaultReps: ex.defaultReps,
+                        durationMinutes: ex.durationMinutes,
+                      },
+                      'border-violet-400',
+                      i === workout.exercises.length - 1
+                    )
+                  )}
+                </div>
+              </div>
+            )}
         </div>
       </div>
 
@@ -200,5 +274,5 @@ export function WorkoutDetail({ onBack, onStartWorkout }: WorkoutDetailProps) {
         </div>
       </div>
     </div>
-  )
+  );
 }

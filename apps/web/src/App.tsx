@@ -1,31 +1,41 @@
-import './style.css'
+import './style.css';
 // Import Firebase to trigger emulator connection
-import './lib/firebase'
+import './lib/firebase';
 
-import { useState } from 'react'
-import { useAuth } from './hooks/useAuth'
-import { Splash } from './pages/Splash'
-import { Welcome } from './pages/Welcome'
-import { Auth } from './pages/Auth'
-import { Onboarding } from './pages/Onboarding'
-import { Dashboard } from './pages/Dashboard'
-import { LogWorkout } from './pages/LogWorkout'
-import type { WorkoutPrefillData } from './pages/LogWorkout'
-import { Plan } from './pages/Plan'
-import { Progress } from './pages/Progress'
-import { WorkoutDetail } from './pages/WorkoutDetail'
-import { WorkoutPlayer } from './pages/WorkoutPlayer'
-import { ProtectedRoute } from './components/ProtectedRoute'
-import { BottomNav } from './components/BottomNav'
+import { useState } from 'react';
+import { useAuth } from './hooks/useAuth';
+import { Splash } from './pages/Splash';
+import { Welcome } from './pages/Welcome';
+import { Auth } from './pages/Auth';
+import { Onboarding } from './pages/Onboarding';
+import { Dashboard } from './pages/Dashboard';
+import { LogWorkout } from './pages/LogWorkout';
+import type { WorkoutPrefillData } from './pages/LogWorkout';
+import { Plan } from './pages/Plan';
+import { Progress } from './pages/Progress';
+import { WorkoutDetail } from './pages/WorkoutDetail';
+import { WorkoutPlayer } from './pages/WorkoutPlayer';
+import { PlannedWorkoutDetail } from './pages/PlannedWorkoutDetail';
+import { PlannedWorkoutPlayer } from './pages/PlannedWorkoutPlayer';
+import { ProtectedRoute } from './components/auth/ProtectedRoute';
+import { BottomNav } from './components/layout/BottomNav';
 
 export function App() {
-  const { user, firebaseUser, loading } = useAuth() // ← CORRECTED: use 'user' not 'userDocument'
-  const [splashComplete, setSplashComplete] = useState(false)
-  const [showWelcome, setShowWelcome] = useState(true)
+  const { user, firebaseUser, loading } = useAuth(); // ← CORRECTED: use 'user' not 'userDocument'
+  const [splashComplete, setSplashComplete] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(true);
   const [currentPage, setCurrentPage] = useState<
-    'dashboard' | 'plan' | 'log' | 'progress' | 'workout-detail' | 'workout-player'
-  >('dashboard')
-  const [logPrefillData, setLogPrefillData] = useState<WorkoutPrefillData | undefined>(undefined)
+    | 'dashboard'
+    | 'plan'
+    | 'log'
+    | 'progress'
+    | 'workout-detail'
+    | 'workout-player'
+    | 'planned-workout-detail'
+    | 'planned-workout-player'
+  >('dashboard');
+  const [logPrefillData, setLogPrefillData] = useState<WorkoutPrefillData | undefined>(undefined);
+  const [plannedWorkoutId, setPlannedWorkoutId] = useState<string | null>(null);
 
   // Show loading spinner while checking auth state (initial load)
   if (loading) {
@@ -36,12 +46,17 @@ export function App() {
           <p className="mt-4 text-gray-600">Loading...</p>
         </div>
       </div>
-    )
+    );
   }
 
   // Show splash screen on first load
+  // Show splash screen on first load
   if (!splashComplete) {
-    return <Splash onComplete={() => setSplashComplete(true)} isAuthenticated={!!firebaseUser} />
+    return (
+      <div className="max-w-[430px] mx-auto min-h-screen bg-white relative shadow-2xl overflow-hidden">
+        <Splash onComplete={() => setSplashComplete(true)} isAuthenticated={!!firebaseUser} />
+      </div>
+    );
   }
 
   // If user is authenticated, check onboarding status
@@ -55,16 +70,18 @@ export function App() {
             <p className="mt-4 text-gray-600">Loading your profile...</p>
           </div>
         </div>
-      )
+      );
     }
 
     // If onboarding is not complete, show onboarding page
     if (!user.onboardingComplete) {
       return (
-        <ProtectedRoute>
-          <Onboarding />
-        </ProtectedRoute>
-      )
+        <div className="max-w-[430px] mx-auto min-h-screen bg-white relative shadow-2xl overflow-hidden">
+          <ProtectedRoute>
+            <Onboarding />
+          </ProtectedRoute>
+        </div>
+      );
     }
 
     // If onboarding is complete, show main app with navigation
@@ -74,71 +91,109 @@ export function App() {
           return (
             <Dashboard
               onLogWorkout={() => {
-                setLogPrefillData(undefined)
-                setCurrentPage('log')
+                setLogPrefillData(undefined);
+                setCurrentPage('log');
               }}
               onViewWorkout={() => setCurrentPage('workout-detail')}
+              onViewPlannedWorkout={(id: string) => {
+                setPlannedWorkoutId(id);
+                setCurrentPage('planned-workout-detail');
+              }}
             />
-          )
+          );
         case 'log':
           return (
             <LogWorkout
               onSuccess={() => {
-                setLogPrefillData(undefined)
-                setCurrentPage('dashboard')
+                setLogPrefillData(undefined);
+                setCurrentPage('dashboard');
               }}
               prefillData={logPrefillData}
             />
-          )
+          );
         case 'plan':
-          return <Plan />
+          return <Plan />;
         case 'progress':
-          return <Progress />
+          return <Progress />;
         case 'workout-detail':
           return (
             <WorkoutDetail
               onBack={() => setCurrentPage('dashboard')}
               onStartWorkout={() => setCurrentPage('workout-player')}
             />
-          )
+          );
         case 'workout-player':
-          return <WorkoutPlayer onClose={() => setCurrentPage('dashboard')} />
+          return <WorkoutPlayer onClose={() => setCurrentPage('dashboard')} />;
+        case 'planned-workout-detail':
+          return (
+            <PlannedWorkoutDetail
+              workoutId={plannedWorkoutId || ''}
+              onBack={() => setCurrentPage('dashboard')}
+              onStartWorkout={() => setCurrentPage('planned-workout-player')}
+            />
+          );
+        case 'planned-workout-player':
+          return (
+            <PlannedWorkoutPlayer
+              workoutId={plannedWorkoutId || ''}
+              onClose={() => setCurrentPage('dashboard')}
+            />
+          );
         default:
           return (
             <Dashboard
               onLogWorkout={() => {
-                setLogPrefillData(undefined)
-                setCurrentPage('log')
+                setLogPrefillData(undefined);
+                setCurrentPage('log');
               }}
               onViewWorkout={() => setCurrentPage('workout-detail')}
+              onViewPlannedWorkout={(id: string) => {
+                setPlannedWorkoutId(id);
+                setCurrentPage('planned-workout-detail');
+              }}
             />
-          )
+          );
       }
-    }
+    };
 
-    const showBottomNav = !['workout-detail', 'workout-player'].includes(currentPage)
+    const showBottomNav = ![
+      'workout-detail',
+      'workout-player',
+      'planned-workout-detail',
+      'planned-workout-player',
+    ].includes(currentPage);
 
     return (
-      <ProtectedRoute>
-        {renderPage()}
-        {showBottomNav && (
-          <BottomNav
-            currentPage={currentPage as 'dashboard' | 'plan' | 'log' | 'progress'}
-            onNavigate={page => {
-              setLogPrefillData(undefined)
-              setCurrentPage(page)
-            }}
-          />
-        )}
-      </ProtectedRoute>
-    )
+      <div className="max-w-[430px] mx-auto min-h-screen bg-white relative shadow-2xl overflow-hidden">
+        <ProtectedRoute>
+          {renderPage()}
+          {showBottomNav && (
+            <BottomNav
+              currentPage={currentPage as 'dashboard' | 'plan' | 'log' | 'progress'}
+              onNavigate={(page) => {
+                setLogPrefillData(undefined);
+                setCurrentPage(page);
+              }}
+            />
+          )}
+        </ProtectedRoute>
+      </div>
+    );
   }
 
   // If user is not authenticated, show welcome page or auth page
   if (showWelcome) {
-    return <Welcome onGetStarted={() => setShowWelcome(false)} />
+    return (
+      <div className="max-w-[430px] mx-auto min-h-screen bg-white relative shadow-2xl overflow-hidden">
+        <Welcome onGetStarted={() => setShowWelcome(false)} />
+      </div>
+    );
   }
 
   // Show auth page
-  return <Auth />
+  return (
+    <div className="max-w-[430px] mx-auto min-h-screen bg-white relative shadow-2xl overflow-hidden">
+      <Auth />
+    </div>
+  );
 }

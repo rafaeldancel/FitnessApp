@@ -1,14 +1,14 @@
-import { useState } from 'react'
-import type { OnboardingFormState } from '../../hooks/useOnboardingForm'
-import type { OnboardingData } from '../../lib/authHelpers'
+import { useState } from 'react';
+import type { OnboardingFormState } from '../../hooks/useOnboardingForm';
+import type { OnboardingData } from '../../lib/authHelpers';
 
 interface SummaryScreenProps {
-  formState: OnboardingFormState
-  onEdit: (step: number) => void
-  onComplete: (data: OnboardingData) => Promise<void>
+  formState: OnboardingFormState;
+  onEdit: (step: number) => void;
+  onComplete: (data: OnboardingData) => Promise<void>;
 }
 
-const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 const GOAL_LABELS: Record<string, string> = {
   build_muscle: 'Build Muscle',
@@ -16,14 +16,14 @@ const GOAL_LABELS: Record<string, string> = {
   improve_endurance: 'Improve Endurance',
   increase_flexibility: 'Increase Flexibility',
   general_fitness: 'General Fitness',
-}
+};
 
 const GENDER_LABELS: Record<string, string> = {
   male: 'Male',
   female: 'Female',
   non_binary: 'Non-binary',
   prefer_not_to_say: 'Prefer not to say',
-}
+};
 
 const RESTRICTION_LABELS: Record<string, string> = {
   back_issues: 'Back Issues',
@@ -34,15 +34,15 @@ const RESTRICTION_LABELS: Record<string, string> = {
   pregnancy: 'Pregnancy',
   recent_surgery: 'Recent Surgery',
   other: 'Other',
-}
+};
 
 export function SummaryScreen({ formState, onEdit, onComplete }: SummaryScreenProps) {
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleComplete = async () => {
-    setIsSubmitting(true)
-    setError(null)
+    setIsSubmitting(true);
+    setError(null);
 
     try {
       // Prepare data for submission
@@ -57,16 +57,16 @@ export function SummaryScreen({ formState, onEdit, onComplete }: SummaryScreenPr
         restDays: formState.restDays,
         hasHealthRestrictions: formState.hasHealthRestrictions,
         healthRestrictions: formState.healthRestrictions,
-      }
+      };
 
-      await onComplete(data)
+      await onComplete(data);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : 'Failed to save your profile. Please try again.'
-      )
-      setIsSubmitting(false)
+      );
+      setIsSubmitting(false);
     }
-  }
+  };
 
   return (
     <div className="space-y-6">
@@ -152,7 +152,7 @@ export function SummaryScreen({ formState, onEdit, onComplete }: SummaryScreenPr
               </button>
             </div>
             <ul className="space-y-2">
-              {formState.fitnessGoals.map(goal => (
+              {formState.fitnessGoals.map((goal) => (
                 <li key={goal} className="flex items-center gap-2 text-sm text-gray-700">
                   <svg className="w-4 h-4 text-violet-600" fill="currentColor" viewBox="0 0 20 20">
                     <path
@@ -188,7 +188,7 @@ export function SummaryScreen({ formState, onEdit, onComplete }: SummaryScreenPr
                   <div className="flex flex-wrap gap-2">
                     {formState.restDays
                       .sort((a, b) => a - b)
-                      .map(day => (
+                      .map((day) => (
                         <span
                           key={day}
                           className="px-2 py-1 bg-violet-100 text-violet-700 rounded text-xs font-medium"
@@ -251,5 +251,5 @@ export function SummaryScreen({ formState, onEdit, onComplete }: SummaryScreenPr
         </p>
       </div>
     </div>
-  )
+  );
 }

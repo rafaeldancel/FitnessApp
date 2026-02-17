@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { Zap } from 'lucide-react'
 import { SignUpForm } from '../components/auth/SignUpForm'
 import { LoginForm } from '../components/auth/LoginForm'
 import { useAuth } from '../hooks/useAuth'
@@ -48,7 +49,7 @@ export function Auth() {
     setView(newView)
     setSuccessMessage(null)
     setResendMessage(null)
-    setFormKey((prev) => prev + 1)
+    setFormKey(prev => prev + 1)
   }
 
   const handleResendVerification = async (password: string) => {
@@ -70,7 +71,7 @@ export function Auth() {
   const handleBackToSignIn = () => {
     setView('login')
     setPendingEmail('')
-    setFormKey((prev) => prev + 1)
+    setFormKey(prev => prev + 1)
   }
 
   const openEmulatorUI = () => {
@@ -125,7 +126,8 @@ export function Auth() {
                     {showEmulatorHelp && (
                       <div className="space-y-3">
                         <p className="text-sm text-amber-800">
-                          Verification emails won't arrive in your real inbox. Follow these steps to verify:
+                          Verification emails won't arrive in your real inbox. Follow these steps to
+                          verify:
                         </p>
 
                         <div className="bg-white rounded-lg p-3 space-y-2">
@@ -150,7 +152,9 @@ export function Auth() {
                             </span>
                             <div>
                               <p className="font-medium text-gray-900">Go to Authentication tab</p>
-                              <p className="text-gray-600 text-xs">Find your email in the users list</p>
+                              <p className="text-gray-600 text-xs">
+                                Find your email in the users list
+                              </p>
                             </div>
                           </div>
 
@@ -159,8 +163,12 @@ export function Auth() {
                               3
                             </span>
                             <div>
-                              <p className="font-medium text-gray-900">Toggle "Email Verified" to TRUE</p>
-                              <p className="text-gray-600 text-xs">Or check the email content for verification link</p>
+                              <p className="font-medium text-gray-900">
+                                Toggle "Email Verified" to TRUE
+                              </p>
+                              <p className="text-gray-600 text-xs">
+                                Or check the email content for verification link
+                              </p>
                             </div>
                           </div>
 
@@ -169,8 +177,12 @@ export function Auth() {
                               4
                             </span>
                             <div>
-                              <p className="font-medium text-gray-900">Return here and click "Back to Sign In"</p>
-                              <p className="text-gray-600 text-xs">Then log in with your credentials</p>
+                              <p className="font-medium text-gray-900">
+                                Return here and click "Back to Sign In"
+                              </p>
+                              <p className="text-gray-600 text-xs">
+                                Then log in with your credentials
+                              </p>
                             </div>
                           </div>
                         </div>
@@ -198,8 +210,21 @@ export function Auth() {
                       xmlns="http://www.w3.org/2000/svg"
                       className="text-green-600"
                     >
-                      <rect x="2" y="4" width="20" height="16" rx="2" stroke="currentColor" strokeWidth="2" />
-                      <path d="M2 7l10 7 10-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                      <rect
+                        x="2"
+                        y="4"
+                        width="20"
+                        height="16"
+                        rx="2"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      />
+                      <path
+                        d="M2 7l10 7 10-7"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                      />
                     </svg>
                   </div>
                   {/* Check mark overlay */}
@@ -215,9 +240,7 @@ export function Auth() {
                 </div>
               </div>
 
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                Verification Email Sent! ✉️
-              </h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Verification Email Sent! ✉️</h2>
 
               <div className="bg-violet-50 border-2 border-violet-200 rounded-lg p-4 mb-2">
                 <p className="text-sm text-gray-700 mb-1">Sent to:</p>
@@ -276,15 +299,13 @@ export function Auth() {
 
             {/* Resend Verification Section */}
             <div className="border-t pt-4">
-              <p className="text-sm text-gray-600 text-center mb-3">
-                Didn't receive the email?
-              </p>
+              <p className="text-sm text-gray-600 text-center mb-3">Didn't receive the email?</p>
               <div className="space-y-3">
                 <input
                   type="password"
                   placeholder="Enter your password to resend"
                   value={passwordForResend}
-                  onChange={(e) => setPasswordForResend(e.target.value)}
+                  onChange={e => setPasswordForResend(e.target.value)}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-600 focus:border-transparent outline-none text-sm"
                   disabled={resending}
                 />
@@ -311,7 +332,7 @@ export function Auth() {
           <p className="text-center text-xs text-gray-500 mt-4">
             {isDevelopment
               ? 'Development mode - Follow the emulator instructions above'
-              : 'Check your spam folder if you don\'t see the email'}
+              : "Check your spam folder if you don't see the email"}
           </p>
         </div>
       </div>
@@ -320,24 +341,27 @@ export function Auth() {
 
   // Regular Auth View (Sign Up / Sign In)
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen bg-violet-50/30 flex items-center justify-center p-6 animate-fade-in">
+      <div className="w-full max-w-sm">
+        {/* Branding Section */}
         <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-12 h-12 bg-white rounded-xl shadow-sm mb-4">
+            <Zap className="w-7 h-7 text-violet-600 fill-violet-600" />
+          </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">FitSprint</h1>
-          <p className="text-gray-600">
-            {view === 'signup'
-              ? 'Create your account to get started'
-              : 'Welcome back! Sign in to continue'}
+          <p className="text-gray-500 font-medium">
+            {view === 'signup' ? 'Start your fitness journey' : 'Welcome back! Sign in to continue'}
           </p>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm p-6">
+        {/* Main Card */}
+        <div className="bg-white rounded-3xl shadow-xl p-8">
           {successMessage && view === 'login' && (
-            <div className="mb-6 bg-green-50 border-2 border-green-200 rounded-lg p-4 relative animate-fade-in">
+            <div className="mb-6 bg-green-50 border-2 border-green-200 rounded-xl p-4 relative animate-fade-in">
               <div className="flex items-start gap-3">
                 <div className="flex-shrink-0">
                   <svg
-                    className="w-6 h-6 text-green-600"
+                    className="w-5 h-5 text-green-600"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -353,30 +377,19 @@ export function Auth() {
                 <div className="flex-1">
                   <p className="text-sm font-medium text-green-800">{successMessage}</p>
                 </div>
-                <button
-                  onClick={() => setSuccessMessage(null)}
-                  className="flex-shrink-0 text-green-600 hover:text-green-800 transition"
-                >
-                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                    <path
-                      fillRule="evenodd"
-                      d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </button>
               </div>
             </div>
           )}
 
-          <div className="flex gap-2 mb-6 bg-gray-100 p-1 rounded-lg">
+          {/* Pill Toggle */}
+          <div className="flex bg-gray-50 p-1.5 rounded-xl mb-8">
             <button
               type="button"
               onClick={() => handleViewToggle('signup')}
-              className={`flex-1 py-2 px-4 rounded-lg font-medium text-sm transition ${
+              className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-semibold transition-all duration-200 ${
                 view === 'signup'
-                  ? 'bg-white text-violet-600 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
+                  ? 'bg-violet-600 text-white shadow-md transform scale-[1.02]'
+                  : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100'
               }`}
             >
               Sign Up
@@ -384,47 +397,86 @@ export function Auth() {
             <button
               type="button"
               onClick={() => handleViewToggle('login')}
-              className={`flex-1 py-2 px-4 rounded-lg font-medium text-sm transition ${
+              className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-semibold transition-all duration-200 ${
                 view === 'login'
-                  ? 'bg-white text-violet-600 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
+                  ? 'bg-violet-600 text-white shadow-md transform scale-[1.02]'
+                  : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100'
               }`}
             >
               Sign In
             </button>
           </div>
 
-          {view === 'signup' ? (
-            <SignUpForm key={`signup-${formKey}`} onSuccess={handleSignUpSuccess} />
-          ) : (
-            <LoginForm key={`login-${formKey}`} />
-          )}
+          {/* Form Content */}
+          <div className="mb-8">
+            {view === 'signup' ? (
+              <SignUpForm key={`signup-${formKey}`} onSuccess={handleSignUpSuccess} />
+            ) : (
+              <LoginForm key={`login-${formKey}`} />
+            )}
+          </div>
+
+          {/* Toggle Link (Bottom of card) */}
+          <div className="text-center">
+            {view === 'signup' ? (
+              <p className="text-sm text-gray-500">
+                Already have an account?{' '}
+                <button
+                  type="button"
+                  onClick={() => handleViewToggle('login')}
+                  className="text-violet-600 hover:text-violet-700 font-bold transition hover:underline"
+                >
+                  Sign in
+                </button>
+              </p>
+            ) : (
+              <p className="text-sm text-gray-500">
+                Don't have an account?{' '}
+                <button
+                  type="button"
+                  onClick={() => handleViewToggle('signup')}
+                  className="text-violet-600 hover:text-violet-700 font-bold transition hover:underline"
+                >
+                  Sign up here
+                </button>
+              </p>
+            )}
+          </div>
         </div>
 
-        <div className="mt-6 text-center">
-          {view === 'signup' ? (
-            <p className="text-sm text-gray-600">
-              Already have an account?{' '}
-              <button
-                type="button"
-                onClick={() => handleViewToggle('login')}
-                className="text-violet-600 hover:text-violet-700 font-medium transition underline"
-              >
-                Sign in here
-              </button>
-            </p>
-          ) : (
-            <p className="text-sm text-gray-600">
-              Don't have an account?{' '}
-              <button
-                type="button"
-                onClick={() => handleViewToggle('signup')}
-                className="text-violet-600 hover:text-violet-700 font-medium transition underline"
-              >
-                Sign up here
-              </button>
-            </p>
-          )}
+        {/* Bottom Section */}
+        <div className="mt-8 space-y-6">
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-200"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-4 bg-gray-50 text-gray-400 font-medium bg-opacity-0 backdrop-blur-sm">
+                or continue with
+              </span>
+            </div>
+          </div>
+
+          <div className="flex gap-4">
+            <button className="flex-1 flex items-center justify-center p-3 border border-gray-200 rounded-xl hover:bg-gray-50 transition bg-white shadow-sm">
+              <img
+                src="https://www.svgrepo.com/show/475656/google-color.svg"
+                alt="Google"
+                className="w-5 h-5 opacity-50 grayscale hover:grayscale-0 transition"
+              />
+            </button>
+            <button className="flex-1 flex items-center justify-center p-3 border border-gray-200 rounded-xl hover:bg-gray-50 transition bg-white shadow-sm">
+              <img
+                src="https://www.svgrepo.com/show/511330/apple-173.svg"
+                alt="Apple"
+                className="w-5 h-5 opacity-50 grayscale hover:grayscale-0 transition"
+              />
+            </button>
+          </div>
+
+          <p className="text-center text-xs text-gray-400 italic">
+            Every rep counts. Every step matters.
+          </p>
         </div>
       </div>
     </div>

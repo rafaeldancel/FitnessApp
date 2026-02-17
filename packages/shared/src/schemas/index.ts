@@ -19,9 +19,6 @@ export {
   LoggedWorkoutSchema,
   CreateLoggedWorkoutSchema,
   WorkoutTypeEnum,
+  PlannedWorkoutSchema,
 } from './workout'
-export type {
-  LoggedWorkout,
-  CreateLoggedWorkout,
-  WorkoutType,
-} from './workout'
+export type { LoggedWorkout, CreateLoggedWorkout, WorkoutType, PlannedWorkout } from './workout'

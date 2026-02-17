@@ -7,7 +7,7 @@ import {
 } from 'firebase/auth'
 import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore'
 import { auth, db } from './firebase'
-import type { User, FitnessGoal, Gender, HealthRestriction } from '@repo/shared/schemas'
+import type { User, FitnessGoal, Gender, HealthRestriction } from '../types'
 
 /**
  * Sign up a new user with email and password, send verification email

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { z } from 'zod'
+import { Mail, Lock, Eye, EyeOff } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 
 // Inline validation schema
@@ -28,6 +29,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
   const [errors, setErrors] = useState<FormErrors>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
+  const [showPassword, setShowPassword] = useState(false)
 
   const validateField = (name: keyof LoginInput, value: string) => {
     try {
@@ -107,19 +109,24 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
         <label htmlFor="login-email" className="block text-sm font-medium text-gray-700 mb-2">
           Email
         </label>
-        <input
-          type="email"
-          id="login-email"
-          name="email"
-          value={formData.email}
-          onChange={handleChange}
-          onBlur={handleBlur}
-          className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-violet-600 focus:border-transparent outline-none transition ${
-            errors.email ? 'border-red-500' : 'border-gray-300'
-          }`}
-          placeholder="you@example.com"
-          disabled={isSubmitting}
-        />
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <Mail className="h-5 w-5 text-gray-400" />
+          </div>
+          <input
+            type="email"
+            id="login-email"
+            name="email"
+            value={formData.email}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-violet-600 focus:border-transparent outline-none transition ${
+              errors.email ? 'border-red-500' : 'border-gray-200'
+            }`}
+            placeholder="you@example.com"
+            disabled={isSubmitting}
+          />
+        </div>
         {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
       </div>
 
@@ -127,20 +134,40 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
         <label htmlFor="login-password" className="block text-sm font-medium text-gray-700 mb-2">
           Password
         </label>
-        <input
-          type="password"
-          id="login-password"
-          name="password"
-          value={formData.password}
-          onChange={handleChange}
-          onBlur={handleBlur}
-          className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-violet-600 focus:border-transparent outline-none transition ${
-            errors.password ? 'border-red-500' : 'border-gray-300'
-          }`}
-          placeholder="Your password"
-          disabled={isSubmitting}
-        />
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <Lock className="h-5 w-5 text-gray-400" />
+          </div>
+          <input
+            type={showPassword ? 'text' : 'password'}
+            id="login-password"
+            name="password"
+            value={formData.password}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            className={`w-full pl-10 pr-12 py-3 border rounded-lg focus:ring-2 focus:ring-violet-600 focus:border-transparent outline-none transition ${
+              errors.password ? 'border-red-500' : 'border-gray-200'
+            }`}
+            placeholder="Your password"
+            disabled={isSubmitting}
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition"
+          >
+            {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+          </button>
+        </div>
         {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password}</p>}
+        <div className="mt-2 text-right">
+          <button
+            type="button"
+            className="text-sm font-medium text-violet-600 hover:text-violet-700 transition"
+          >
+            Forgot password?
+          </button>
+        </div>
       </div>
 
       <button
